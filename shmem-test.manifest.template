@@ -1,0 +1,39 @@
+libos.entrypoint = "/usr/bin/shmem-test"
+
+[loader]
+entrypoint = "file:{{ gramine.libos }}"
+argv = ["shmem-test"]
+log_level = "{{ log_level }}"
+env.LD_LIBRARY_PATH = "/lib:{{ arch_libdir }}:/usr{{ arch_libdir }}"
+env.PATH = "{{ execdir }}"
+
+[fs]
+root.uri = "file:/"
+start_dir = "/opt/shmem-test"
+mounts = [
+  { path = "{{ execdir }}", uri = "file:{{ execdir }}" },
+  { path = "/lib", uri = "file:{{ gramine.runtimedir() }}" },
+  { path = "{{ arch_libdir }}", uri = "file:{{ arch_libdir }}" },
+  { type = "encrypted", path = "/opt/shmem-test/", uri = "file:/opt/shmem-test/" },
+]
+
+insecure__keys.default = "ffeeddccbbaa99887766554433221100"
+
+[sgx]
+debug = false
+edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
+enclave_size = "256M"
+max_threads = 2
+nonpie_binary = true
+
+trusted_files = [
+  "file:/usr/bin/shmem-test",
+  "file:{{ gramine.libos }}",
+  "file:{{ gramine.runtimedir() }}/",
+  "file:{{ arch_libdir }}/",
+]
+
+#file_check_policy = "allow_all_but_log"
+
+[sys]
+enable_sigterm_injection = true
